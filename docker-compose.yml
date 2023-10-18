@@ -1,0 +1,48 @@
+version: '3'
+
+services:
+  pingpong-server:
+    image: nginx:1.23.3-alpine
+    container_name: pingpong-server
+    volumes:
+      - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
+      - ./:/var/www/html/
+    ports:
+      - 80:80
+    networks:
+      - pingpong-network
+    command: nginx -g "daemon off;"
+
+  pingpong-php:
+    build: ./docker/php
+    container_name: pingpong-php
+    image: pingpong-php
+    volumes:
+      - ./:/var/www/html/
+    networks:
+      - pingpong-network
+
+  pingpong-db:
+    build: ./docker/pgsql
+    container_name: pingpong-db
+    image: pingpong-db
+    environment:
+      POSTGRES_PASSWORD: pingpong
+      POSTGRES_DB: pingpong
+      POSTGRES_USER: pingpong
+    ports:
+      - 5432:5432
+    volumes:
+      - pingpong-db:/var/lib/postgresql/data
+    networks:
+      - pingpong-network
+
+networks:
+  pingpong-network:
+    name: pingpong-network
+    driver: bridge
+
+volumes:
+  pingpong-db:
+    name: pingpong-db
+    driver: 'local'
